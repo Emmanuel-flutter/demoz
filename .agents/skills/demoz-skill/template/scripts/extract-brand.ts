@@ -295,16 +295,13 @@ const renderTaglineLiteral = (tagline: BrandProfile["tagline"]): string => {
   return `"${escapeString(tagline)}"`;
 };
 
-// Derive a short wordmark (up to 3 chars) from the brand name when none is given.
+// Derive a short wordmark (up to 3 chars) from the brand name when none is given:
+// initials for a multi-word name, otherwise the first 3 letters of the one word.
 const deriveShortName = (name: string): string => {
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0] ?? "")
-    .join("")
-    .slice(0, 3)
-    .toUpperCase();
-  return initials || name.slice(0, 2).toUpperCase();
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const abbrev =
+    words.length >= 2 ? words.map((w) => w[0]).join("") : (words[0] ?? "");
+  return abbrev.slice(0, 3).toUpperCase() || "BR";
 };
 
 // Regenerates src/theme.ts from an approved profile. If the profile gives an
