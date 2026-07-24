@@ -190,11 +190,14 @@ project (existing or empty) and open it in Claude Code:
 npx skills@1.2.0 add Emmanuel-flutter/demoz --yes
 ```
 
-This installs both
-`demoz-skill` and `remotion-best-practices` into `.agents/skills/` (symlinked for Claude Code and
-GitHub Copilot). Then in Claude Code, ask it to set up a branded demo video — the `demoz-skill`
-detects whether the project already has the kit, scaffolds a Remotion project if needed, copies in
-the bundled components/scripts, and runs the 3-step brand onboarding.
+Then **restart your Claude Code session** so the skill loader picks up the new files. `npx skills
+add` only copies files — it cannot start a conversation — so the onboarding begins on the next load,
+not during install.
+
+This installs both `demoz-skill` and `remotion-best-practices` into `.agents/skills/` (symlinked for
+Claude Code and GitHub Copilot). After the restart, `demoz-skill` loads, detects that no brand is
+set, scaffolds a Remotion project if needed, and **starts the 3-step brand onboarding
+automatically** — you do not need to ask.
 
 If you change the kit (`src/theme.ts`, `src/fonts.ts`, `src/animation.ts`, `src/components/`,
 `src/compositions/`, `public/brand/`, `scripts/`, `brand-input/README.md`, `.env.example`), run
