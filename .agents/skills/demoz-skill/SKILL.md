@@ -1,6 +1,6 @@
 ---
 name: demoz-skill
-description: Set up and extend brand-agnostic demo videos with Remotion in whatever project this skill is installed into. Drop in your logo and brand media, extract a contrast-checked palette, save it to the theme, then render on-brand intros, screen-recording frames, lower-thirds, and outros. Bundles reusable scene components, a WCAG brand-extraction flow, Playwright screenshot capture, and fal.ai AI video/audio generation as a self-contained payload.
+description: Set up and extend brand-agnostic demo videos with Remotion in whatever project this skill is installed into. Drop in your logo and brand media, extract a contrast-checked palette, save it to the theme, then render on-brand intros, screen-recording frames, lower-thirds, and outros. Bundles reusable scene components, a WCAG brand-extraction flow, Playwright screenshot capture, and fal.ai AI video/audio generation as a self-contained payload. On first load, when no brand is set, it starts the 3-step brand onboarding automatically.
 metadata:
   tags: remotion, brand, video, playwright, fal, wcag, theming
 ---
@@ -19,6 +19,25 @@ renders only after you confirm and verify it (the `--promote` step).
 For general Remotion technique (animation timing, layout, sequencing, transitions, fonts), also
 load the companion skill `remotion-best-practices`. This skill covers the brand kit and its
 bundled tooling only.
+
+## On install — start the 3-step onboarding immediately
+
+When this skill is installed into a project, or loaded for the first time, do NOT wait to be
+asked. Start the onboarding right away, because the kit ships with no brand set.
+
+Follow this order:
+
+1. Set up the project first if needed. If there is no `src/theme.ts` yet, scaffold the kit — see
+   "Setting up branded video generation in this project" below — then continue.
+2. Check the brand state. Read `src/theme.ts`.
+   - If it exports `brandReady = false` (the shipped state), the brand is NOT set. Every
+     composition renders the "Brand not set" screen. Begin the 3-step onboarding below at Step 1
+     now.
+   - If it exports `brandReady = true`, the brand is already set. Skip onboarding. Go to "Adding a
+     new branded scene" or render.
+3. Tell the user in one short line, then proceed. For example: "This kit has no brand set yet.
+   Let's do the 3-step setup — add your logo and brand media to `brand-input/`, and I will extract
+   your palette." Then guide them through Step 1.
 
 ## 3-step onboarding — make the videos your brand
 
@@ -121,7 +140,7 @@ object and `colors`? If yes, skip to "Adding a new branded scene". Otherwise:
      `src/index.css` afterwards. If Tailwind got wired in anyway, remove the `enableTailwind`
      import and the `overrideWebpackConfig` call from `remotion.config.ts`, replace
      `src/index.css`'s `@import "tailwindcss";` with a plain reset (e.g. `* { box-sizing:
-     border-box; }`), and run `npm uninstall @remotion/tailwind-v4 tailwindcss`.
+border-box; }`), and run `npm uninstall @remotion/tailwind-v4 tailwindcss`.
 
 2. **Copy the bundled template.** This skill's own directory (typically
    `.agents/skills/demoz-skill/`) has a `template/` folder with everything needed:
@@ -137,16 +156,19 @@ object and `colors`? If yes, skip to "Adding a new branded scene". Otherwise:
      the `<Composition>` entries and imports by hand instead. Do not overwrite the existing ones.
 
 3. **Install dependencies.** Add these to the project and install:
+
    ```
    @fal-ai/client, @remotion/google-fonts, @remotion/media, @remotion/transitions,
    @remotion/zod-types, dotenv, playwright, zod  (dependencies)
    tsx  (devDependency)
    ```
+
    Prefer `npx remotion add @remotion/google-fonts` / `@remotion/media` / `@remotion/transitions`
    / `@remotion/zod-types` so their versions stay pinned to the project's installed `remotion`
    version. Then run `npm install @fal-ai/client playwright dotenv zod` and `npm install -D tsx`.
 
 4. **Add npm scripts** to `package.json`:
+
    ```json
    "capture": "tsx scripts/capture-screenshots.ts",
    "playwright:install": "playwright install chromium",

@@ -85,6 +85,11 @@ Open this project in Claude Code and ask it to build or extend a video in plain 
 _"add a new scene showing the reporting dashboard, with a lower third that says 'Live Reporting'"_.
 Claude Code reads the skill, reuses the existing brand components, and registers the new composition.
 
+**On install, onboarding starts itself.** The first time Claude Code loads `demoz-skill` in a
+project with no brand set, it does not wait to be asked — it detects `brandReady = false` and begins
+the 3-step onboarding, guiding you to add your media and extract your palette. (If you just ran
+`npx skills add`, restart the session so the skill loader picks up the new files.)
+
 ## Getting real footage: Playwright screenshots
 
 ```bash
