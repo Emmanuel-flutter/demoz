@@ -172,10 +172,10 @@ scripts/
 project (existing or empty) and open it in Claude Code:
 
 ```bash
-npx skills@1.2.0 add <owner>/demoz --yes
+npx skills@1.2.0 add Emmanuel-flutter/demoz --yes
 ```
 
-(Replace `<owner>/demoz` with this repo's GitHub path once it is pushed.) This installs both
+This installs both
 `demoz-skill` and `remotion-best-practices` into `.agents/skills/` (symlinked for Claude Code and
 GitHub Copilot). Then in Claude Code, ask it to set up a branded demo video — the `demoz-skill`
 detects whether the project already has the kit, scaffolds a Remotion project if needed, copies in
