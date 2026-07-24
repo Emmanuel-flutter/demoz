@@ -1,4 +1,9 @@
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  interpolate,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { colors, fonts } from "../theme";
 import { headingFontFamily, bodyFontFamily } from "../fonts";
 import { enterProgress } from "../animation";
@@ -7,11 +12,11 @@ import { Backdrop } from "./Backdrop";
 // One big statement per frame, with an optional supporting subtitle revealed
 // shortly after — follows the video-layout rule of one focal message per scene.
 //
-// No opacity fade here by design: this is entered via a TransitionSeries
-// fade() in Showcase.tsx, which already fades the whole scene in — an
-// internal opacity ramp on top would compound multiplicatively and read
-// dimmer/slower than intended (see Outro.tsx for the same rationale).
-// translateY alone still reads as a clear entrance.
+// No opacity fade here by design: when this scene is entered via a
+// TransitionSeries fade(), that already fades the whole scene in — an internal
+// opacity ramp on top would compound multiplicatively and read dimmer/slower
+// than intended (see Outro.tsx for the same rationale). translateY alone still
+// reads as a clear entrance.
 export const TitleCard: React.FC<{
   title: string;
   subtitle?: string;

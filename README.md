@@ -4,9 +4,10 @@ A brand-agnostic [Remotion](https://remotion.dev) demo-video kit — for produci
 demo videos (screen captures plus a branded intro/outro/lower-thirds, and optionally AI-generated
 B-roll and voiceover) that look consistent across every team that uses it.
 
-It ships with a **neutral placeholder brand** so it renders out of the box. You then make it your
-brand with a 3-step onboarding: drop in your logo and brand media, extract a contrast-checked
-palette, review it, and save it to the theme.
+It has **no default look**: until you set your brand, every composition renders a "Brand not set"
+screen. You make it your brand with a 3-step onboarding: drop in your logo and brand media, extract
+a contrast-checked palette, review it, and save it to the theme — then the compositions render your
+brand.
 
 ## Quickstart
 
@@ -15,10 +16,11 @@ npm install
 npm run dev          # opens Remotion Studio — preview/edit compositions live
 ```
 
-Open `Full-Examples/FullWalkthrough` in the sidebar for the reference example (Intro → branded
-screen-recording frame with a lower-third → Outro), built from a placeholder screenshot. Swap in a
-real screenshot (see below) and edit the text props in the Studio sidebar. Open `Brand/Swatch` to
-see the current brand profile as colour chips and sample text.
+This kit has **no default look**. Until you set your brand, every composition renders a
+"Brand not set" screen that points you to the 3-step onboarding below. Once your brand is saved,
+open `Full-Examples/FullWalkthrough` for the reference example (Intro → branded screen-recording
+frame with a lower-third → Outro), swap in a real screenshot (see below), and edit the text props
+in the Studio sidebar. Open `Brand/Swatch` to see your palette as colour chips and sample text.
 
 To render an actual video file:
 
@@ -30,6 +32,11 @@ npm run render -- FullWalkthrough out/walkthrough.mp4
 
 The brand lives in `src/theme.ts` (colours, tagline, logo path), `src/fonts.ts` (font faces), and
 `public/brand/logo-mark.png` (the mark). Change those and the whole kit follows.
+
+**No default look.** The kit ships with the brand _unset_ — every composition shows a "set up your
+brand" screen until you finish onboarding. The `--promote` step marks the brand confirmed and
+verified (it writes only after the WCAG gate passes and sets `brandReady = true`); from then on the
+compositions render your brand.
 
 The easiest path is to let Claude Code do it via the bundled `demoz-skill`:
 
@@ -43,15 +50,18 @@ The easiest path is to let Claude Code do it via the bundled `demoz-skill`:
 Under the hood, the deterministic half is `npm run brand:extract`:
 
 ```bash
-# Validate a proposed profile + run the WCAG contrast gate. Writes a CANDIDATE
-# (brand.candidate.json) and a report (brand.candidate.report.md). Does NOT touch the live theme.
+# 1. Validate a proposed profile + run the WCAG contrast gate. Writes a CANDIDATE
+#    (brand.candidate.json) and a report (brand.candidate.report.md). Does NOT touch the live theme.
 npm run brand:extract -- --profile <proposed-profile>.json
 
-# Preview the proposed brand
-npx remotion still Swatch /tmp/swatch.png
+# 2. Review brand.candidate.report.md — the hex values and the pass/fail contrast table.
 
-# Save the approved candidate into the live theme + fonts + logo (explicit step)
+# 3. Save the approved candidate into the live theme + fonts + logo, and set brandReady=true.
+#    This confirmed + verified step refuses to write a failing palette.
 npm run brand:extract -- --promote --profile brand.candidate.json --logo brand-input/<your-logo>.png
+
+# 4. Verify on screen — the brand renders now (before this it showed the "Brand not set" screen).
+npx remotion still Swatch /tmp/swatch.png
 ```
 
 The gate enforces WCAG contrast: `foreground` vs `background` >= 4.5:1, and `accent`/`accentCyan`/
@@ -72,7 +82,7 @@ also work with other skill-compatible agents):
   project you run it in — you do not need this repo itself.
 
 Open this project in Claude Code and ask it to build or extend a video in plain language, e.g.
-*"add a new scene showing the reporting dashboard, with a lower third that says 'Live Reporting'"*.
+_"add a new scene showing the reporting dashboard, with a lower third that says 'Live Reporting'"_.
 Claude Code reads the skill, reuses the existing brand components, and registers the new composition.
 
 ## Getting real footage: Playwright screenshots
@@ -108,12 +118,12 @@ You can bring your own model for each media type. Set the model-override variabl
 pass `--model <slug>` on the command. The `--model` flag wins over the variable. A blank variable
 uses the built-in default.
 
-| Media type | Command | Env variable | Default model |
-|---|---|---|---|
-| Video | `gen:video` | `VIDEO_MODEL` | `bytedance/seedance-2.0/text-to-video` |
-| Voiceover | `gen:audio voiceover` | `AUDIO_TTS_MODEL` | `fal-ai/elevenlabs/tts/eleven-v3` |
-| Music | `gen:audio music` | `AUDIO_MUSIC_MODEL` | `fal-ai/lyria2` |
-| Sound effects | `gen:audio sfx` | `AUDIO_SFX_MODEL` | `fal-ai/elevenlabs/sound-effects/v2` |
+| Media type    | Command               | Env variable        | Default model                          |
+| ------------- | --------------------- | ------------------- | -------------------------------------- |
+| Video         | `gen:video`           | `VIDEO_MODEL`       | `bytedance/seedance-2.0/text-to-video` |
+| Voiceover     | `gen:audio voiceover` | `AUDIO_TTS_MODEL`   | `fal-ai/elevenlabs/tts/eleven-v3`      |
+| Music         | `gen:audio music`     | `AUDIO_MUSIC_MODEL` | `fal-ai/lyria2`                        |
+| Sound effects | `gen:audio sfx`       | `AUDIO_SFX_MODEL`   | `fal-ai/elevenlabs/sound-effects/v2`   |
 
 Note: image assets come from Playwright screenshots (see above), not a generation model, so there
 is no image-model variable.

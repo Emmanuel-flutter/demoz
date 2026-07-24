@@ -13,11 +13,21 @@ import {
   FULL_WALKTHROUGH_DURATION,
 } from "./compositions/FullWalkthrough";
 import { Swatch, SwatchSchema } from "./compositions/Swatch";
+import { withBrandGate } from "./components/withBrandGate";
 import { brand, colors, motion } from "./theme";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
 const FPS = motion.fps;
+
+// Every composition is gated: it shows the "set up your brand" screen until the
+// brand kit is confirmed and verified (brandReady). There is no default look.
+const GatedFullWalkthrough = withBrandGate(FullWalkthrough);
+const GatedIntro = withBrandGate(Intro);
+const GatedOutro = withBrandGate(Outro);
+const GatedLowerThird = withBrandGate(LowerThird);
+const GatedScreenRecordingFrame = withBrandGate(ScreenRecordingFrame);
+const GatedSwatch = withBrandGate(Swatch);
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -25,7 +35,7 @@ export const RemotionRoot: React.FC = () => {
       <Folder name="Full-Examples">
         <Composition
           id="FullWalkthrough"
-          component={FullWalkthrough}
+          component={GatedFullWalkthrough}
           durationInFrames={FULL_WALKTHROUGH_DURATION}
           fps={FPS}
           width={WIDTH}
@@ -45,7 +55,7 @@ export const RemotionRoot: React.FC = () => {
       <Folder name="Building-Blocks">
         <Composition
           id="Intro"
-          component={Intro}
+          component={GatedIntro}
           durationInFrames={motion.introDurationInFrames}
           fps={FPS}
           width={WIDTH}
@@ -55,7 +65,7 @@ export const RemotionRoot: React.FC = () => {
         />
         <Composition
           id="Outro"
-          component={Outro}
+          component={GatedOutro}
           durationInFrames={motion.outroDurationInFrames}
           fps={FPS}
           width={WIDTH}
@@ -67,7 +77,7 @@ export const RemotionRoot: React.FC = () => {
         />
         <Composition
           id="LowerThird"
-          component={LowerThird}
+          component={GatedLowerThird}
           durationInFrames={motion.lowerThirdDurationInFrames}
           fps={FPS}
           width={WIDTH}
@@ -81,7 +91,7 @@ export const RemotionRoot: React.FC = () => {
         />
         <Composition
           id="ScreenRecordingFrame"
-          component={ScreenRecordingFrame}
+          component={GatedScreenRecordingFrame}
           durationInFrames={150}
           fps={FPS}
           width={WIDTH}
@@ -101,7 +111,7 @@ export const RemotionRoot: React.FC = () => {
               npx remotion still Swatch /tmp/swatch.png */}
         <Composition
           id="Swatch"
-          component={Swatch}
+          component={GatedSwatch}
           durationInFrames={30}
           fps={FPS}
           width={WIDTH}

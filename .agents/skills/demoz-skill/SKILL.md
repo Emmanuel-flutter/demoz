@@ -12,8 +12,9 @@ works in any project, not only a project that already uses Remotion. This skill 
 self-contained. It bundles everything it scaffolds under `template/` next to this file. So
 `npx skills add <this-repo>` installs it into any project or empty folder and it still works.
 
-The kit ships with a NEUTRAL placeholder brand. It renders out of the box. Then you make it
-yours with the 3-step onboarding below.
+The kit ships with NO default look. Until you set your brand, every composition renders a
+"Brand not set" screen. You make the kit yours with the 3-step onboarding below. The brand
+renders only after you confirm and verify it (the `--promote` step).
 
 For general Remotion technique (animation timing, layout, sequencing, transitions, fonts), also
 load the companion skill `remotion-best-practices`. This skill covers the brand kit and its
@@ -41,8 +42,13 @@ folder is `brand-input/`.
 
 The agent reads the media. The agent proposes a palette. Then you review and approve it.
 
+Until you approve, the kit has NO default look. Every composition renders the "Brand not set"
+screen. The `--promote` step marks the brand confirmed and verified — it flips `brandReady` to
+true — and only then do the compositions render your brand.
+
 1. The agent reads your logo and brand media in `brand-input/`.
-2. The agent writes a proposed profile as JSON (the colour tokens, a font guess, a tagline).
+2. The agent writes a proposed profile as JSON (the colour tokens, a font guess, a tagline). The
+   profile MUST include a `name`. `shortName` is derived from the name when it is absent.
 3. The agent runs the deterministic gate:
    ```
    npm run brand:extract -- --profile <proposed-profile>.json
@@ -50,18 +56,21 @@ The agent reads the media. The agent proposes a palette. Then you review and app
    This validates the JSON. This runs the WCAG contrast gate. This writes a CANDIDATE
    (`brand.candidate.json`) and a report (`brand.candidate.report.md`). It does NOT change the
    live theme.
-4. You review the report. Check the colour chips and the pass/fail contrast table.
-5. Preview the proposed brand as a still image:
-   ```
-   npx remotion still Swatch /tmp/swatch.png
-   ```
-   Read the image. Confirm the colours and text read well.
-6. Approve the profile. Then the agent saves it for all future renders:
+4. You review the report. Check the hex values and the pass/fail contrast table. This is the
+   review-before-write step.
+5. Approve the profile. Then the agent saves it and marks the brand confirmed:
    ```
    npm run brand:extract -- --promote --profile brand.candidate.json --logo brand-input/<your-logo>.png
    ```
    This writes `src/theme.ts` and `src/fonts.ts`. This copies your logo to
-   `public/brand/logo-mark.png`. This is the "save for future use" step.
+   `public/brand/logo-mark.png`. This sets `brandReady = true`. This is the "save for future
+   use" step.
+6. Verify the result on screen. The brand renders now, so check it:
+   ```
+   npx remotion still Swatch /tmp/swatch.png
+   ```
+   Read the image. Confirm the colours, logo, and text read well. If not, adjust the profile and
+   run `--promote` again.
 
 Writing the live theme is always its own explicit action. The gate never overwrites the theme
 on its own. `--promote` refuses to run when a colour fails the contrast gate. Fix the colour, or
@@ -150,10 +159,10 @@ object and `colors`? If yes, skip to "Adding a new branded scene". Otherwise:
    ```bash
    npm install
    npx remotion still FullWalkthrough /tmp/check.png --frame=45
-   npx remotion still Swatch /tmp/swatch.png
    ```
-   Read the output images back. Confirm they render with the placeholder brand and readable text.
-   Then run the 3-step onboarding above to make it your brand.
+   Read the output image back. Because the brand is not set yet, it renders the neutral "Brand not
+   set" screen (there is no default look). That is the correct initial state. Then run the 3-step
+   onboarding above to make it your brand; after `--promote`, re-render to see your brand.
 
 ## Adding a new branded scene
 

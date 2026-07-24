@@ -38,9 +38,12 @@ const LOGO_PATH = path.join(REPO_ROOT, "public", "brand", "logo-mark.png");
 // Schema
 // ---------------------------------------------------------------------------
 
+// 6-digit hex only. The generated theme derives backgroundElevated and builds
+// alpha stops (e.g. `${background}00`) by string concatenation that assumes
+// #RRGGBB; a 3-digit value would produce NaN channels and non-transparent stops.
 const hex = z
   .string()
-  .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "must be a hex colour like #1A2B3C");
+  .regex(/^#[0-9a-fA-F]{6}$/, "must be a 6-digit hex colour like #1A2B3C");
 const confidence = z.number().min(0).max(1);
 
 const BrandProfileSchema = z.object({
@@ -54,12 +57,15 @@ const BrandProfileSchema = z.object({
   // A best-guess font family name (e.g. "Poppins"). Nullable.
   fontGuess: z.string().nullable().optional(),
   // A tagline as a single string or an array of words. Nullable.
-  tagline: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+  tagline: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
   // Optional per-field confidence in [0,1] (e.g. { "accent": 0.8 }).
   confidence: z.record(z.string(), confidence).optional(),
-  // Optional identity fields (beyond the colour contract) used only by
-  // --promote to set the wordmark. Absent => the theme's existing values stay.
-  name: z.string().optional(),
+  // Identity fields used by --promote to set the wordmark. `name` is REQUIRED —
+  // a confirmed brand must have a name. shortName is derived from name if absent.
+  name: z.string().min(1, "a brand name is required"),
   shortName: z.string().optional(),
   parentBrand: z.string().optional(),
   // Optional path to the logo to promote. --logo overrides this.
@@ -72,19 +78,29 @@ type BrandProfile = z.infer<typeof BrandProfileSchema>;
 // WCAG gate config
 // ---------------------------------------------------------------------------
 
-const GATE: { field: keyof BrandProfile; against: keyof BrandProfile; min: number }[] = [
+const GATE: {
+  field: keyof BrandProfile;
+  against: keyof BrandProfile;
+  min: number;
+}[] = [
   { field: "foreground", against: "background", min: 4.5 },
   { field: "accent", against: "background", min: 3 },
   { field: "accentCyan", against: "background", min: 3 },
   { field: "muted", against: "background", min: 3 },
 ];
 
-type GateRow = { field: string; against: string; value: string; min: number } & RepairResult;
+type GateRow = {
+  field: string;
+  against: string;
+  value: string;
+  min: number;
+} & RepairResult;
 
 // Same "slight lighten toward white" the theme uses, so a derived
 // backgroundElevated matches what src/theme.ts would compute.
 const deriveElevated = (background: string): string => {
-  const channel = (h: string, i: number) => parseInt(h.replace("#", "").slice(i * 2, i * 2 + 2), 16);
+  const channel = (h: string, i: number) =>
+    parseInt(h.replace("#", "").slice(i * 2, i * 2 + 2), 16);
   const expand = (h: string) => {
     const c = h.replace("#", "");
     return c.length === 3
@@ -98,7 +114,9 @@ const deriveElevated = (background: string): string => {
   const to2 = (n: number) => Math.round(n).toString(16).padStart(2, "0");
   return (
     "#" +
-    [0, 1, 2].map((i) => to2(channel(bg, i) + (255 - channel(bg, i)) * 0.08)).join("")
+    [0, 1, 2]
+      .map((i) => to2(channel(bg, i) + (255 - channel(bg, i)) * 0.08))
+      .join("")
   ).toUpperCase();
 };
 
@@ -106,7 +124,9 @@ const deriveElevated = (background: string): string => {
 // Input
 // ---------------------------------------------------------------------------
 
-const readProfileInput = (profilePath?: string): { raw: string; source: string } => {
+const readProfileInput = (
+  profilePath?: string,
+): { raw: string; source: string } => {
   if (profilePath) {
     const resolved = path.resolve(profilePath);
     if (!fs.existsSync(resolved)) {
@@ -122,7 +142,9 @@ const readProfileInput = (profilePath?: string): { raw: string; source: string }
   return { raw: fs.readFileSync(0, "utf8"), source: "stdin" };
 };
 
-const parseProfile = (profilePath?: string): { profile: BrandProfile; source: string } => {
+const parseProfile = (
+  profilePath?: string,
+): { profile: BrandProfile; source: string } => {
   const { raw, source } = readProfileInput(profilePath);
   if (!raw.trim()) {
     throw new Error("Profile is empty.");
@@ -157,7 +179,8 @@ const evaluateGate = (profile: BrandProfile): GateRow[] =>
 
 const buildCandidate = (profile: BrandProfile) => ({
   ...profile,
-  backgroundElevated: profile.backgroundElevated ?? deriveElevated(profile.background),
+  backgroundElevated:
+    profile.backgroundElevated ?? deriveElevated(profile.background),
 });
 
 const formatTagline = (tagline: BrandProfile["tagline"]): string => {
@@ -177,9 +200,19 @@ const buildReport = (
       : "—";
 
   const paletteRows = (
-    ["background", "backgroundElevated", "accent", "accentCyan", "foreground", "muted"] as const
+    [
+      "background",
+      "backgroundElevated",
+      "accent",
+      "accentCyan",
+      "foreground",
+      "muted",
+    ] as const
   )
-    .map((k) => `| ${k} | \`${(candidate as unknown as Record<string, string>)[k]}\` | ${conf(k)} |`)
+    .map(
+      (k) =>
+        `| ${k} | \`${(candidate as unknown as Record<string, string>)[k]}\` | ${conf(k)} |`,
+    )
     .join("\n");
 
   const gateRows = rows
@@ -238,7 +271,21 @@ npm run brand:extract -- --promote --profile brand.candidate.json --logo <path/t
 // Promote (writes the live theme — explicit, never automatic)
 // ---------------------------------------------------------------------------
 
-const escapeString = (s: string) => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+// Escape a value for embedding inside a double-quoted TS string literal.
+// Handles backslash, quote AND line terminators / control chars — a raw newline
+// in a brand field would otherwise split the literal and make theme.ts unparseable.
+const escapeString = (s: string): string =>
+  Array.from(s)
+    .map((c) => {
+      const code = c.charCodeAt(0);
+      if (c === "\\") return "\\\\";
+      if (c === '"') return '\\"';
+      if (code < 0x20 || code === 0x2028 || code === 0x2029) {
+        return "\\u" + code.toString(16).padStart(4, "0");
+      }
+      return c;
+    })
+    .join("");
 
 const renderTaglineLiteral = (tagline: BrandProfile["tagline"]): string => {
   if (!tagline) return '["TAGLINE", "GOES", "HERE"]';
@@ -246,6 +293,18 @@ const renderTaglineLiteral = (tagline: BrandProfile["tagline"]): string => {
     return `[${tagline.map((t) => `"${escapeString(t)}"`).join(", ")}]`;
   }
   return `"${escapeString(tagline)}"`;
+};
+
+// Derive a short wordmark (up to 3 chars) from the brand name when none is given.
+const deriveShortName = (name: string): string => {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+  return initials || name.slice(0, 2).toUpperCase();
 };
 
 // Regenerates src/theme.ts from an approved profile. If the profile gives an
@@ -280,11 +339,15 @@ const mixToward = (hex: string, target: string, amount: number): string => {
 // Written by \`npm run brand:extract -- --promote\`. Edit by hand any time — keep
 // the token NAMES stable (components import them); change only the values.
 
+// Confirmed by a human (--promote) and passed the WCAG contrast gate, so the
+// demo compositions render this brand instead of the setup screen.
+export const brandReady = true;
+
 ${helper}const background = "${profile.background}";
 
 export const brand = {
-  name: "${escapeString(profile.name ?? "Your Brand")}",
-  shortName: "${escapeString(profile.shortName ?? "YB")}",
+  name: "${escapeString(profile.name)}",
+  shortName: "${escapeString(profile.shortName ?? deriveShortName(profile.name))}",
   tagline: ${renderTaglineLiteral(profile.tagline)},
   parentBrand: "${escapeString(profile.parentBrand ?? "")}",
   logoMark: "brand/logo-mark.png",
@@ -323,10 +386,13 @@ const toGoogleFontPath = (name: string): string =>
     .join("");
 
 const renderFontsFile = (fontGuess?: string | null): string => {
-  const heading = fontGuess ? toGoogleFontPath(fontGuess) : "Aldrich";
-  const warn = fontGuess
+  // A fontGuess can sanitise to an empty path (e.g. "!!!"), which would emit an
+  // invalid `@remotion/google-fonts/` import. Fall back to the default face then.
+  const guessPath = fontGuess ? toGoogleFontPath(fontGuess) : "";
+  const heading = guessPath || "Aldrich";
+  const warn = guessPath
     ? `// NOTE: heading font was set from the extraction fontGuess ("${escapeString(
-        fontGuess,
+        fontGuess ?? "",
       )}").
 // Confirm "${heading}" exists in @remotion/google-fonts; if the build fails,
 // revert to a known face such as Aldrich.\n`
@@ -357,7 +423,10 @@ const promote = (profile: BrandProfile, logoFlag: string | undefined) => {
   const failures = rows.filter((r) => !r.meets);
   if (failures.length > 0) {
     const list = failures
-      .map((r) => `  - ${r.field}: ${r.ratio.toFixed(2)}:1 (needs ${r.min}:1) → try ${r.suggested}`)
+      .map(
+        (r) =>
+          `  - ${r.field}: ${r.ratio.toFixed(2)}:1 (needs ${r.min}:1) → try ${r.suggested}`,
+      )
       .join("\n");
     throw new Error(
       `Refusing to promote: ${failures.length} colour(s) fail the contrast gate:\n${list}\n` +
@@ -380,7 +449,9 @@ const promote = (profile: BrandProfile, logoFlag: string | undefined) => {
     fs.copyFileSync(resolved, LOGO_PATH);
     console.log(`Copied logo ${resolved} -> ${LOGO_PATH}`);
   } else {
-    console.log("No --logo provided; kept the existing public/brand/logo-mark.png.");
+    console.log(
+      "No --logo provided; kept the existing public/brand/logo-mark.png.",
+    );
   }
 
   console.log("\nBrand promoted. Render a still to confirm:");
@@ -415,7 +486,9 @@ const main = async () => {
   console.log("Contrast gate:");
   for (const r of rows) {
     const status = r.meets ? "PASS" : "FAIL";
-    const extra = r.meets ? "" : `  -> try ${r.suggested} (${r.suggestedRatio.toFixed(2)}:1)`;
+    const extra = r.meets
+      ? ""
+      : `  -> try ${r.suggested} (${r.suggestedRatio.toFixed(2)}:1)`;
     console.log(
       `  ${status}  ${r.field} vs ${r.against}: ${r.ratio.toFixed(2)}:1 (needs ${r.min}:1)${extra}`,
     );

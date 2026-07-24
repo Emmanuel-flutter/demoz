@@ -63,9 +63,9 @@ const BrandProfileSchema = z.object({
     .optional(),
   // Optional per-field confidence in [0,1] (e.g. { "accent": 0.8 }).
   confidence: z.record(z.string(), confidence).optional(),
-  // Optional identity fields (beyond the colour contract) used only by
-  // --promote to set the wordmark. Absent => the theme's existing values stay.
-  name: z.string().optional(),
+  // Identity fields used by --promote to set the wordmark. `name` is REQUIRED —
+  // a confirmed brand must have a name. shortName is derived from name if absent.
+  name: z.string().min(1, "a brand name is required"),
   shortName: z.string().optional(),
   parentBrand: z.string().optional(),
   // Optional path to the logo to promote. --logo overrides this.
@@ -295,6 +295,18 @@ const renderTaglineLiteral = (tagline: BrandProfile["tagline"]): string => {
   return `"${escapeString(tagline)}"`;
 };
 
+// Derive a short wordmark (up to 3 chars) from the brand name when none is given.
+const deriveShortName = (name: string): string => {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+  return initials || name.slice(0, 2).toUpperCase();
+};
+
 // Regenerates src/theme.ts from an approved profile. If the profile gives an
 // explicit backgroundElevated we write it as a literal; otherwise we DERIVE it
 // from `background` (matching the shipped neutral theme) and emit the helper.
@@ -327,11 +339,15 @@ const mixToward = (hex: string, target: string, amount: number): string => {
 // Written by \`npm run brand:extract -- --promote\`. Edit by hand any time — keep
 // the token NAMES stable (components import them); change only the values.
 
+// Confirmed by a human (--promote) and passed the WCAG contrast gate, so the
+// demo compositions render this brand instead of the setup screen.
+export const brandReady = true;
+
 ${helper}const background = "${profile.background}";
 
 export const brand = {
-  name: "${escapeString(profile.name ?? "Your Brand")}",
-  shortName: "${escapeString(profile.shortName ?? "YB")}",
+  name: "${escapeString(profile.name)}",
+  shortName: "${escapeString(profile.shortName ?? deriveShortName(profile.name))}",
   tagline: ${renderTaglineLiteral(profile.tagline)},
   parentBrand: "${escapeString(profile.parentBrand ?? "")}",
   logoMark: "brand/logo-mark.png",

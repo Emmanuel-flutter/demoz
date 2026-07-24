@@ -10,6 +10,11 @@
 // Keep the token NAMES stable — every component imports these names. Only change
 // the values.
 
+// FALSE until you complete the 3-step onboarding. While false, every composition
+// renders the "set up your brand" screen — there is NO default brand look.
+// `npm run brand:extract -- --promote` sets this true after the WCAG gate passes.
+export const brandReady = false;
+
 // Slight lighten of `background` toward white, for elevated surfaces (cards,
 // window chrome). Derived so it always tracks the base background.
 const mixToward = (hex: string, target: string, amount: number): string => {

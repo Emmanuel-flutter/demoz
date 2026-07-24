@@ -9,7 +9,7 @@
 //   npm run gen:video -- --prompt "..." --out public/generated/video/clip.mp4
 //   npm run gen:video -- --prompt "..." --resolution 1080p --duration 6 --aspect-ratio 16:9 --no-audio
 //   npm run gen:video -- --prompt "..." --out ... --model <your-provider/model-slug>
-import { fal, downloadToFile, logQueueUpdate } from "./fal-client";
+import { downloadToFile, logQueueUpdate, requireFal } from "./fal-client";
 import { parseEnumFlag, parseFlags, resolveModel, runCli } from "./cli-utils";
 
 const RESOLUTIONS = ["480p", "720p", "1080p", "4k"] as const;
@@ -25,9 +25,15 @@ const main = async () => {
     process.exit(1);
   }
 
-  const resolution = parseEnumFlag(flags.resolution, "resolution", RESOLUTIONS, "1080p");
+  const resolution = parseEnumFlag(
+    flags.resolution,
+    "resolution",
+    RESOLUTIONS,
+    "1080p",
+  );
   const model = resolveModel(flags.model, "VIDEO_MODEL", DEFAULT_VIDEO_MODEL);
 
+  const fal = requireFal();
   console.log(`Generating video via ${model}...`);
   const result = await fal.subscribe(model, {
     input: {
