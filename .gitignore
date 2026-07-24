@@ -1,0 +1,39 @@
+node_modules
+dist
+.DS_Store
+.env*
+!.env.example
+
+# Editor folders
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Playwright storage-state files (may contain live session cookies/tokens —
+# see scripts/capture-screenshots.ts's --save-storage / --storage-state flow).
+auth.json
+
+# Ignore the rendered output video from Git but not videos you import into src/.
+out
+
+# Brand extraction candidates/reports are per-run working files — not committed.
+brand.candidate.json
+brand.candidate.report.md
+
+# The user's dropped brand media is theirs — keep the folder + its README, ignore the rest.
+brand-input/*
+!brand-input/README.md
+
+# fal.ai-generated media and Playwright captures are ephemeral/paid — don't commit them,
+# except the checked-in reference placeholder the FullWalkthrough composition uses.
+public/generated/*
+!public/generated/.gitkeep
+!public/generated/audio
+public/generated/audio/*
+!public/generated/audio/.gitkeep
+public/screenshots/*
+!public/screenshots/.gitkeep
+!public/screenshots/placeholder-product-ui.png

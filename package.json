@@ -1,0 +1,46 @@
+{
+  "name": "demoz",
+  "version": "1.0.0",
+  "description": "Brand-agnostic Remotion demo-video kit — drop in your logo/brand media, extract a contrast-checked palette, and render on-brand product demos.",
+  "repository": {},
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@fal-ai/client": "^1.10.1",
+    "@remotion/cli": "4.0.484",
+    "@remotion/google-fonts": "4.0.484",
+    "@remotion/media": "4.0.484",
+    "@remotion/transitions": "4.0.484",
+    "@remotion/zod-types": "4.0.484",
+    "dotenv": "^17.4.2",
+    "playwright": "^1.61.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.484",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "4.0.484",
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "eslint": "9.19.0",
+    "prettier": "3.8.1",
+    "tsx": "^4.22.5",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "render": "remotion render",
+    "upgrade": "remotion upgrade",
+    "lint": "eslint src && tsc",
+    "capture": "tsx scripts/capture-screenshots.ts",
+    "playwright:install": "playwright install chromium",
+    "brand:extract": "tsx scripts/extract-brand.ts",
+    "gen:video": "tsx scripts/generate-video.ts",
+    "gen:audio": "tsx scripts/generate-audio.ts"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}
