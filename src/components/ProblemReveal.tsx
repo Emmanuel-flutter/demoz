@@ -8,12 +8,12 @@ const popEasing = Easing.out(Easing.back(2));
 // Punches in a short list of phrases one after another, each with a quick
 // scale-pop — for a fast, urgent problem-statement beat.
 //
-// `startFrame` defaults past the incoming TransitionSeries fade() (20 frames
-// in Showcase.tsx): each phrase is fully transparent until its own pop, so if
-// a phrase's pop overlapped the crossfade window its opacity would compound
-// multiplicatively with the transition's — starting after it avoids that
-// while still using opacity here (unlike TitleCard/Outro) because it's load
-// -bearing for the sequential reveal, not just decorative.
+// `startFrame` defaults past a typical incoming TransitionSeries fade() window:
+// each phrase is fully transparent until its own pop, so if a phrase's pop
+// overlapped the crossfade its opacity would compound multiplicatively with the
+// transition's — starting after it avoids that. Opacity is still used here
+// (unlike TitleCard/Outro) because it's load-bearing for the sequential reveal,
+// not just decorative.
 export const ProblemReveal: React.FC<{
   phrases: string[];
   stagger?: number;
@@ -31,7 +31,12 @@ export const ProblemReveal: React.FC<{
       }}
     >
       {phrases.map((phrase, i) => {
-        const progress = enterProgress(frame, 14, startFrame + i * stagger, popEasing);
+        const progress = enterProgress(
+          frame,
+          14,
+          startFrame + i * stagger,
+          popEasing,
+        );
         const scale = interpolate(progress, [0, 1], [0.85, 1]);
         return (
           <div
@@ -40,7 +45,10 @@ export const ProblemReveal: React.FC<{
               fontFamily: headingFontFamily,
               fontWeight: fonts.headingWeight,
               fontSize: 88,
-              color: i === phrases.length - 1 ? colors.accentCyan : colors.foreground,
+              color:
+                i === phrases.length - 1
+                  ? colors.accentCyan
+                  : colors.foreground,
               opacity: progress,
               scale,
             }}

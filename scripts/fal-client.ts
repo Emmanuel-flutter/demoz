@@ -5,22 +5,30 @@ import path from "node:path";
 
 // BYOK: media generation needs your own provider key. The brand EXTRACTION step
 // does NOT need a key (the agent reads your media in-session).
-if (!process.env.FAL_KEY) {
-  throw new Error(
-    "FAL_KEY is not set. Media generation is bring-your-own-key. Copy .env.example to " +
-      ".env and set FAL_KEY (get a fal.ai key at https://fal.ai/dashboard/keys). " +
-      "This key is only needed for gen:video / gen:audio, not for brand extraction.",
-  );
-}
-
-fal.config({ credentials: process.env.FAL_KEY });
+//
+// Call requireFal() at the START of a generation run — not at module load — so a
+// missing key surfaces as runCli's clean one-line message, not an import-time
+// stack trace. It configures the fal client and returns it.
+export const requireFal = () => {
+  if (!process.env.FAL_KEY) {
+    throw new Error(
+      "FAL_KEY is not set. Media generation is bring-your-own-key. Copy .env.example to " +
+        ".env and set FAL_KEY (get a fal.ai key at https://fal.ai/dashboard/keys). " +
+        "This key is only needed for gen:video / gen:audio, not for brand extraction.",
+    );
+  }
+  fal.config({ credentials: process.env.FAL_KEY });
+  return fal;
+};
 
 export { fal };
 
 export const downloadToFile = async (url: string, outPath: string) => {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Failed to download ${url}: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `Failed to download ${url}: ${res.status} ${res.statusText}`,
+    );
   }
   const buffer = Buffer.from(await res.arrayBuffer());
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
@@ -28,7 +36,10 @@ export const downloadToFile = async (url: string, outPath: string) => {
   return outPath;
 };
 
-export const logQueueUpdate = (update: { status: string; logs?: { message: string }[] }) => {
+export const logQueueUpdate = (update: {
+  status: string;
+  logs?: { message: string }[];
+}) => {
   if (update.status === "IN_PROGRESS" && update.logs) {
     update.logs.forEach((log) => console.log(log.message));
   }

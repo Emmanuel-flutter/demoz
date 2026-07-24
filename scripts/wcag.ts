@@ -42,7 +42,9 @@ export const relativeLuminance = (rgb: Rgb): number => {
     const s = v / 255;
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
   };
-  return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b);
+  return (
+    0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b)
+  );
 };
 
 // Contrast ratio between two colors, always >= 1 (order-independent).
@@ -55,7 +57,8 @@ export const contrastRatio = (a: string, b: string): number => {
 };
 
 // Round a contrast ratio to 2 decimals for reporting.
-export const roundRatio = (ratio: number): number => Math.round(ratio * 100) / 100;
+export const roundRatio = (ratio: number): number =>
+  Math.round(ratio * 100) / 100;
 
 // --- HSL helpers (used only to nudge lightness while keeping hue/saturation) ---
 
@@ -109,14 +112,6 @@ const hslToRgb = ({ h, s, l }: Hsl): Rgb => {
     g: hue2rgb(p, q, h) * 255,
     b: hue2rgb(p, q, h - 1 / 3) * 255,
   };
-};
-
-// Lighten (amount > 0) or darken (amount < 0) a color by nudging HSL lightness.
-// Used by theme.ts to DERIVE backgroundElevated from background.
-export const adjustLightness = (hex: string, amount: number): string => {
-  const hsl = rgbToHsl(hexToRgb(hex));
-  hsl.l = Math.max(0, Math.min(1, hsl.l + amount));
-  return rgbToHex(hslToRgb(hsl));
 };
 
 export type RepairResult = {

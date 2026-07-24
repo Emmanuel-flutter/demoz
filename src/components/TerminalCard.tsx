@@ -1,4 +1,9 @@
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  interpolate,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { colors, fonts } from "../theme";
 import { bodyFontFamily, monoFontFamily } from "../fonts";
 import { enterProgress } from "../animation";
@@ -7,16 +12,22 @@ import { Typewriter } from "./Typewriter";
 
 const CHROME_DOT_COLORS = ["#FF5F57", "#FEBC2E", "#28C840"];
 
-// No opacity fade-in by design (entered via a TransitionSeries fade() in
-// Showcase.tsx — see TitleCard.tsx for why); a scale-in reads as an entrance
-// without compounding, matching ScreenRecordingFrame's convention.
+// No opacity fade-in by design (when entered via a TransitionSeries fade() —
+// see TitleCard.tsx for why); a scale-in reads as an entrance without
+// compounding, matching ScreenRecordingFrame's convention.
 export const TerminalCard: React.FC<{
   command: string;
   commandStartFrame?: number;
   outputLines: string[];
   outputStartFrame: number;
   outputStagger?: number;
-}> = ({ command, commandStartFrame = 15, outputLines, outputStartFrame, outputStagger = 10 }) => {
+}> = ({
+  command,
+  commandStartFrame = 15,
+  outputLines,
+  outputStartFrame,
+  outputStagger = 10,
+}) => {
   const frame = useCurrentFrame();
   const { width, height } = useVideoConfig();
 
@@ -52,7 +63,12 @@ export const TerminalCard: React.FC<{
             {CHROME_DOT_COLORS.map((dotColor) => (
               <div
                 key={dotColor}
-                style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: dotColor }}
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  backgroundColor: dotColor,
+                }}
               />
             ))}
           </div>
@@ -67,14 +83,22 @@ export const TerminalCard: React.FC<{
           >
             <div>
               <span style={{ color: colors.accentCyan }}>{"$ "}</span>
-              <Typewriter text={command} charFrames={2} startFrame={commandStartFrame} />
+              <Typewriter
+                text={command}
+                charFrames={2}
+                startFrame={commandStartFrame}
+              />
             </div>
             {outputLines.map((line, i) => (
               <div
                 key={i}
                 style={{
                   color: colors.muted,
-                  opacity: enterProgress(frame, 10, outputStartFrame + i * outputStagger),
+                  opacity: enterProgress(
+                    frame,
+                    10,
+                    outputStartFrame + i * outputStagger,
+                  ),
                   fontFamily: bodyFontFamily,
                   fontWeight: fonts.bodyWeight,
                 }}

@@ -12,7 +12,7 @@
 //   npm run gen:audio -- sfx --text "..." --out public/generated/audio/whoosh.mp3 [--duration 3] [--model <slug>]
 //   npm run gen:audio -- music --text "..." --out public/generated/audio/theme.wav [--negative-prompt "vocals, low quality"] [--model <slug>]
 //     (Lyria2 returns WAV data regardless of the --out extension you choose — use .wav to avoid confusion)
-import { fal, downloadToFile, logQueueUpdate } from "./fal-client";
+import { fal, downloadToFile, logQueueUpdate, requireFal } from "./fal-client";
 import { parseFlags, parseNumberFlag, resolveModel, runCli } from "./cli-utils";
 
 const DEFAULT_TTS_MODEL = "fal-ai/elevenlabs/tts/eleven-v3";
@@ -26,6 +26,7 @@ const generateVoiceover = async (flags: Record<string, string>) => {
     );
     process.exit(1);
   }
+  requireFal();
   const model = resolveModel(flags.model, "AUDIO_TTS_MODEL", DEFAULT_TTS_MODEL);
   console.log(`Generating voiceover via ${model}...`);
   const result = await fal.subscribe(model, {
@@ -49,6 +50,7 @@ const generateSfx = async (flags: Record<string, string>) => {
     );
     process.exit(1);
   }
+  requireFal();
   const model = resolveModel(flags.model, "AUDIO_SFX_MODEL", DEFAULT_SFX_MODEL);
   console.log(`Generating sound effect via ${model}...`);
   const result = await fal.subscribe(model, {
@@ -70,7 +72,12 @@ const generateMusic = async (flags: Record<string, string>) => {
     );
     process.exit(1);
   }
-  const model = resolveModel(flags.model, "AUDIO_MUSIC_MODEL", DEFAULT_MUSIC_MODEL);
+  requireFal();
+  const model = resolveModel(
+    flags.model,
+    "AUDIO_MUSIC_MODEL",
+    DEFAULT_MUSIC_MODEL,
+  );
   console.log(`Generating music via ${model}...`);
   const result = await fal.subscribe(model, {
     input: {
@@ -92,7 +99,9 @@ const main = async () => {
   if (mode === "sfx") return generateSfx(flags);
   if (mode === "music") return generateMusic(flags);
 
-  console.error('Usage: npm run gen:audio -- <voiceover|sfx|music> --text "..." --out <path>');
+  console.error(
+    'Usage: npm run gen:audio -- <voiceover|sfx|music> --text "..." --out <path>',
+  );
   process.exit(1);
 };
 
